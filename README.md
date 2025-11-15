@@ -109,6 +109,17 @@ This framework enables security teams to:
    - Tracks detection maturity levels
    - Generates executive dashboards
 
+7. **Master Orchestrator** (`run_all.py`)
+   - Executes complete workflow end-to-end
+   - Handles error recovery and reporting
+   - Supports selective phase execution
+
+8. **Environment Validator** (`validate_environment.py`)
+   - Validates Python dependencies
+   - Checks directory structure
+   - Verifies configuration files
+   - Ensures readiness before execution
+
 ---
 
 ## 🚀 Quick Start
@@ -131,12 +142,29 @@ cd atomic-red-team-validation
 # Install Python dependencies
 pip install -r automation_scripts/requirements.txt
 
+# Validate environment setup
+python automation_scripts/validate_environment.py
+
 # Install Atomic Red Team (Windows PowerShell - Run as Administrator)
 IEX (IWR 'https://raw.githubusercontent.com/redcanaryco/invoke-atomicredteam/master/install-atomicredteam.ps1' -UseBasicParsing);
 Install-AtomicRedTeam -getAtoms -Force
 ```
 
 ### Usage
+
+#### Option A: Run Complete Workflow (Recommended)
+
+```bash
+# Execute all phases automatically
+python automation_scripts/run_all.py
+
+# Or skip specific phases
+python automation_scripts/run_all.py --skip-execution --skip-visualization
+```
+
+**Output:** All artifacts in respective directories
+
+#### Option B: Run Individual Scripts
 
 #### Step 1: Build Test Matrix
 

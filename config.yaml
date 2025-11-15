@@ -1,0 +1,92 @@
+# Purple Team Validation Framework Configuration
+# Customize these settings for your environment
+
+# SIEM Configuration
+siem:
+  type: "wazuh"  # Options: wazuh, splunk, elk
+  host: "10.0.0.20"
+  port: 55000
+  # Credentials should be set via environment variables:
+  # SIEM_USERNAME and SIEM_PASSWORD
+
+# Test Execution Settings
+execution:
+  # Time to wait between tests for SIEM log ingestion (seconds)
+  wait_time: 5
+
+  # Test timeout (seconds)
+  timeout: 120
+
+  # Run tests in dry-run mode (simulates without actual execution)
+  dry_run: false
+
+  # Technique filter (empty = all techniques)
+  technique_filter: []
+  # Example: ['T1059.001', 'T1548']
+
+# Detection Thresholds
+detection:
+  # Minimum events to consider "detected"
+  min_events_detected: 3
+
+  # Minimum events for "partial" detection
+  min_events_partial: 1
+
+  # Minimum confidence score for "detected" (0-100)
+  min_confidence_detected: 80
+
+  # Minimum confidence score for "partial" (0-100)
+  min_confidence_partial: 60
+
+# Gap Analysis Settings
+gap_analysis:
+  # Severity weights for risk scoring
+  severity_weights:
+    CRITICAL: 10
+    HIGH: 7
+    MEDIUM: 4
+    LOW: 1
+
+  # Target coverage percentage
+  target_coverage: 85
+
+# Output Settings
+output:
+  # Base directories for outputs
+  test_matrix_dir: "test_matrix"
+  gap_analysis_dir: "gap_analysis"
+  detection_rules_dir: "detection_rules/sigma_rules"
+  visualizations_dir: "visualizations"
+
+  # Logging
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_file: "atomic_execution.log"
+
+# Visualization Settings
+visualization:
+  # DPI for saved images
+  dpi: 300
+
+  # Figure sizes (width, height) in inches
+  heatmap_size: [16, 8]
+  pie_chart_size: [10, 8]
+  bar_chart_size: [10, 6]
+
+# Priority Techniques
+# Add/remove techniques based on your threat landscape
+priority_techniques:
+  - T1566    # Phishing
+  - T1059.001  # PowerShell
+  - T1547    # Boot/Logon Autostart
+  - T1078    # Valid Accounts
+  - T1021    # Remote Services
+  - T1005    # Data from Local System
+  - T1567    # Exfiltration Over Web Service
+  - T1529    # System Shutdown/Reboot
+  - T1548    # Abuse Elevation Control
+  - T1562    # Impair Defenses
+  - T1140    # Deobfuscate/Decode
+  - T1112    # Modify Registry
+  - T1070    # Indicator Removal
+  - T1543    # Create/Modify System Process
+  - T1071    # Application Layer Protocol
