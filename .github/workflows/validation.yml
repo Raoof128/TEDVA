@@ -1,0 +1,240 @@
+name: Validation & Testing
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pylint black mypy
+        pip install -r automation_scripts/requirements.txt
+
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 automation_scripts --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 automation_scripts --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+      continue-on-error: true
+
+    - name: Check code formatting with black
+      run: |
+        black --check --diff automation_scripts/
+      continue-on-error: true
+
+  validate-syntax:
+    name: Syntax Validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pyyaml
+
+    - name: Validate Python syntax
+      run: |
+        python -m py_compile automation_scripts/*.py
+
+    - name: Validate YAML files
+      run: |
+        python << 'EOF'
+        import yaml
+        import sys
+        from pathlib import Path
+
+        yaml_files = [
+            'config.yaml',
+            'detection_rules/sigma_rules/t1059_001_powershell_execution.yml',
+            'detection_rules/sigma_rules/t1548_uac_bypass.yml',
+            'detection_rules/sigma_rules/t1562_impair_defenses.yml',
+        ]
+
+        errors = []
+        for f in yaml_files:
+            try:
+                with open(f) as file:
+                    yaml.safe_load(file)
+                print(f'✓ {f}')
+            except Exception as e:
+                errors.append(f'{f}: {e}')
+                print(f'✗ {f}: {e}')
+
+        if errors:
+            print('\nValidation failed!')
+            sys.exit(1)
+        else:
+            print('\n✅ All YAML files valid')
+        EOF
+
+    - name: Validate JSON files
+      run: |
+        python << 'EOF'
+        import json
+        import sys
+
+        json_files = ['siem_integration/kibana_dashboard.json']
+
+        errors = []
+        for f in json_files:
+            try:
+                with open(f) as file:
+                    json.load(file)
+                print(f'✓ {f}')
+            except Exception as e:
+                errors.append(f'{f}: {e}')
+                print(f'✗ {f}: {e}')
+
+        if errors:
+            sys.exit(1)
+        else:
+            print('✅ All JSON files valid')
+        EOF
+
+  environment-validation:
+    name: Environment Validation
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r automation_scripts/requirements.txt
+
+    - name: Run environment validation
+      run: |
+        python automation_scripts/validate_environment.py
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+      continue-on-error: true
+
+    - name: Upload Trivy results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+      if: always()
+      continue-on-error: true
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install safety
+      run: pip install safety
+
+    - name: Check dependencies for known vulnerabilities
+      run: |
+        safety check -r automation_scripts/requirements.txt --json
+      continue-on-error: true
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Check required documentation files
+      run: |
+        files=(
+          "README.md"
+          "CONTRIBUTING.md"
+          "CODE_OF_CONDUCT.md"
+          "SECURITY.md"
+          "LICENSE"
+          "CHANGELOG.md"
+          "METHODOLOGY.md"
+        )
+
+        missing=()
+        for file in "${files[@]}"; do
+          if [ ! -f "$file" ]; then
+            missing+=("$file")
+            echo "❌ Missing: $file"
+          else
+            echo "✅ Found: $file"
+          fi
+        done
+
+        if [ ${#missing[@]} -ne 0 ]; then
+          echo ""
+          echo "Missing required documentation files!"
+          exit 1
+        fi
+
+    - name: Check for broken links in markdown
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        config-file: '.github/markdown-link-check-config.json'
+      continue-on-error: true

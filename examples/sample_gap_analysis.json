@@ -1,0 +1,106 @@
+{
+  "timestamp": "2025-01-15T12:30:00",
+  "test_results_source": "test_matrix/test_execution_results.json",
+  "baseline_source": "gap_analysis/baseline_assessment.json",
+  "total_techniques_tested": 15,
+  "gaps": {
+    "undetected": [
+      {
+        "technique_id": "T1548",
+        "technique_name": "Abuse Elevation Control",
+        "tactic": "Privilege Escalation",
+        "gap_type": "UNDETECTED",
+        "severity": "CRITICAL",
+        "business_impact": "CRITICAL - Privilege escalation, full system control",
+        "attack_patterns": [
+          "UAC bypass via Fodhelper",
+          "UAC bypass via EventVwr",
+          "Token manipulation"
+        ],
+        "remediation_priority": "IMMEDIATE (24-48 hours)",
+        "estimated_effort": "8-16 hours (rule dev + tuning)",
+        "current_coverage": 0,
+        "target_coverage": 85,
+        "recommendation": "Monitor registry keys: HKCU\\Software\\Classes\\ms-settings, eventvwr.exe process creation. Deploy UAC bypass detection rules."
+      },
+      {
+        "technique_id": "T1562",
+        "technique_name": "Impair Defenses",
+        "tactic": "Defense Evasion",
+        "gap_type": "UNDETECTED",
+        "severity": "CRITICAL",
+        "business_impact": "CRITICAL - Disabling security controls, blind SOC",
+        "attack_patterns": [
+          "Disable Windows Defender",
+          "Stop security services",
+          "Delete event logs"
+        ],
+        "remediation_priority": "IMMEDIATE (24-48 hours)",
+        "estimated_effort": "8-16 hours (rule dev + tuning)",
+        "current_coverage": 0,
+        "target_coverage": 85,
+        "recommendation": "Alert on security service state changes (Event ID 7040), Windows Defender modification, audit policy changes."
+      }
+    ],
+    "partial": [
+      {
+        "technique_id": "T1112",
+        "technique_name": "Modify Registry",
+        "tactic": "Defense Evasion",
+        "gap_type": "PARTIAL",
+        "severity": "MEDIUM",
+        "current_coverage": 45,
+        "target_coverage": 85,
+        "events_detected": 2,
+        "coverage": 45,
+        "remediation_priority": "MEDIUM (1 month)"
+      }
+    ],
+    "detected": [
+      {
+        "technique_id": "T1059.001",
+        "technique_name": "PowerShell",
+        "tactic": "Execution",
+        "gap_type": "DETECTED",
+        "severity": "CRITICAL",
+        "current_coverage": 95,
+        "target_coverage": 95
+      }
+    ]
+  },
+  "risk_assessment": {
+    "total_risk_score": 24.5,
+    "risk_level": "MEDIUM - Moderate improvement needed",
+    "undetected_critical": 2,
+    "recommendation": "Prioritize detection engineering sprint. Target 3-5 critical rules this week."
+  },
+  "recommendations": [
+    {
+      "gap_id": "T1548",
+      "technique_name": "Abuse Elevation Control",
+      "priority": "IMMEDIATE (24-48 hours)",
+      "detection_strategy": "Monitor registry keys: HKCU\\Software\\Classes\\ms-settings, eventvwr.exe process creation. Deploy UAC bypass detection rules.",
+      "rule_template": "sigma_rules/t1548_uac_bypass.yml",
+      "effort_estimate": "8-16 hours (rule dev + tuning)",
+      "owner": "Detection Engineering Team",
+      "expected_outcome": "Increase coverage from 0% to 85%"
+    }
+  ],
+  "statistics": {
+    "by_severity": {
+      "CRITICAL": 3,
+      "HIGH": 4,
+      "MEDIUM": 6,
+      "LOW": 2
+    },
+    "by_tactic": {
+      "Execution": 2,
+      "Privilege Escalation": 3,
+      "Defense Evasion": 5,
+      "Persistence": 2,
+      "Lateral Movement": 2,
+      "Collection": 1
+    },
+    "total_risk_score": 24.5
+  }
+}

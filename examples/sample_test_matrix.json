@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "created": "2025-01-15T10:00:00",
+    "version": "1.0",
+    "framework": "MITRE ATT&CK",
+    "tool": "Atomic Red Team"
+  },
+  "test_plan": [
+    {
+      "technique_id": "T1059.001",
+      "technique_name": "PowerShell",
+      "tactic": "Execution",
+      "priority": "CRITICAL",
+      "description": "PowerShell command and script execution",
+      "atomic_tests": [
+        {
+          "test_number": 1,
+          "test_name": "PowerShell - Encoded Command",
+          "executor": "powershell",
+          "platforms": ["windows"],
+          "description": "Execute PowerShell with encoded command"
+        }
+      ],
+      "expected_detections": [
+        {
+          "source": "Windows Event Log",
+          "event_id": 4688,
+          "description": "Process creation for powershell.exe"
+        },
+        {
+          "source": "Sysmon",
+          "event_id": 1,
+          "description": "Process Create - CommandLine contains encoded commands"
+        },
+        {
+          "source": "PowerShell Operational",
+          "event_id": 4104,
+          "description": "Script block logging"
+        }
+      ],
+      "baseline_status": "not_tested",
+      "test_status": "pending"
+    },
+    {
+      "technique_id": "T1548",
+      "technique_name": "Abuse Elevation Control Mechanism",
+      "tactic": "Privilege Escalation",
+      "priority": "CRITICAL",
+      "description": "UAC bypass and privilege escalation",
+      "atomic_tests": [
+        {
+          "test_number": 1,
+          "test_name": "UAC Bypass via Fodhelper",
+          "executor": "powershell",
+          "platforms": ["windows"],
+          "description": "UAC bypass using fodhelper.exe"
+        }
+      ],
+      "expected_detections": [
+        {
+          "source": "Sysmon",
+          "event_id": 1,
+          "description": "Process creation with UAC bypass indicators"
+        },
+        {
+          "source": "Sysmon",
+          "event_id": 13,
+          "description": "Registry modification to ms-settings\\shell\\open\\command"
+        }
+      ],
+      "baseline_status": "not_tested",
+      "test_status": "pending"
+    }
+  ],
+  "statistics": {
+    "total_techniques": 2,
+    "by_priority": {
+      "CRITICAL": 2
+    },
+    "by_tactic": {
+      "Execution": 1,
+      "Privilege Escalation": 1
+    }
+  }
+}

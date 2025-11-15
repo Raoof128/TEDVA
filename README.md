@@ -3,6 +3,10 @@
 [![MITRE ATT&CK](https://img.shields.io/badge/MITRE-ATT%26CK-red)](https://attack.mitre.org/)
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Code Quality](https://img.shields.io/badge/Code%20Quality-A-brightgreen)](automation_scripts/)
+[![Documentation](https://img.shields.io/badge/Docs-Complete-blue)](documentation/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Security](https://img.shields.io/badge/Security-Policy-blue)](SECURITY.md)
 
 > **Systematic validation of detection coverage using Atomic Red Team framework**
 > Identify security control gaps, develop evidence-based detection engineering priorities, and demonstrate measurable security improvement.
