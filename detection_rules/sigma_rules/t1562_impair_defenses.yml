@@ -1,0 +1,52 @@
+title: Security Service Disabled or Modified
+id: c3d4e5f6-a7b8-9012-cdef-123456789012
+status: validated
+description: |
+  Detects attempts to disable or modify security services including Windows Defender,
+  Windows Firewall, and security monitoring tools. Created from Atomic Red Team validation.
+  CRITICAL detection gap - attackers disable defenses to avoid detection.
+author: Purple Team Validation Framework
+date: 2025/01/15
+modified: 2025/01/15
+references:
+  - https://attack.mitre.org/techniques/T1562
+  - https://github.com/redcanaryco/atomic-red-team
+logsource:
+  product: windows
+  service: system
+  definition: 'Requirements: Windows Event Log - System (Event ID 7040, 5001)'
+detection:
+  selection_service_disabled:
+    EventID: 7040
+    param1:
+      - 'Windows Defender'
+      - 'WinDefend'
+      - 'MpsSvc'  # Windows Firewall
+      - 'Sense'   # Windows Defender ATP
+      - 'WdNisSvc'
+      - 'wscsvc'  # Security Center
+    param2: 'disabled'
+  selection_defender_disabled:
+    EventID: 5001
+    Provider_Name: 'Microsoft-Windows-Windows Defender'
+  selection_powershell_disable:
+    EventID: 1
+    Image|endswith: '\powershell.exe'
+    CommandLine|contains:
+      - 'Set-MpPreference -DisableRealtimeMonitoring'
+      - 'Set-MpPreference -DisableIOAVProtection'
+      - 'Set-MpPreference -DisableBehaviorMonitoring'
+      - 'Stop-Service WinDefend'
+      - 'netsh advfirewall set'
+  condition: selection_service_disabled or selection_defender_disabled or selection_powershell_disable
+falsepositives:
+  - Planned maintenance windows with change control approval
+  - Security software updates requiring temporary service shutdown
+  - Administrator troubleshooting with documented tickets
+  - Legitimate software installation requiring defender exclusions
+level: critical
+tags:
+  - attack.t1562
+  - attack.defense_evasion
+  - atomic_red_team
+  - security_evasion

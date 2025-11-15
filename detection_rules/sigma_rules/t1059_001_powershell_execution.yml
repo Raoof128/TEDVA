@@ -1,0 +1,53 @@
+title: Suspicious PowerShell Execution with Encoded Commands
+id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+status: experimental
+description: |
+  Detects PowerShell execution with base64 encoded commands or suspicious download strings.
+  This rule was developed from Atomic Red Team purple team validation.
+  Commonly used by attackers to execute malicious payloads while evading detection.
+author: Purple Team Validation Framework
+date: 2025/01/15
+modified: 2025/01/15
+references:
+  - https://attack.mitre.org/techniques/T1059/001
+  - https://github.com/redcanaryco/atomic-red-team
+logsource:
+  product: windows
+  service: powershell
+  definition: 'Requirements: PowerShell ScriptBlock logging (Event ID 4104) must be enabled'
+detection:
+  selection_encoded:
+    EventID: 4104
+    ScriptBlockText|contains:
+      - 'FromBase64String'
+      - 'EncodedCommand'
+      - '-enc '
+      - '-e '
+      - 'Invoke-Expression'
+      - 'IEX '
+  selection_download:
+    EventID: 4104
+    ScriptBlockText|contains:
+      - 'DownloadString'
+      - 'DownloadFile'
+      - 'WebClient'
+      - 'Invoke-WebRequest'
+      - 'iwr '
+      - 'curl '
+  filter_legitimate:
+    ScriptBlockText|contains:
+      - 'Microsoft.PowerShell'
+      - 'Windows Defender'
+      - 'Get-Help'
+  condition: (selection_encoded or selection_download) and not filter_legitimate
+falsepositives:
+  - Legitimate PowerShell scripts by IT administrators
+  - Software deployment tools (SCCM, PDQ Deploy)
+  - System management scripts
+  - Update processes
+level: high
+tags:
+  - attack.t1059.001
+  - attack.execution
+  - atomic_red_team
+  - purple_team_validation

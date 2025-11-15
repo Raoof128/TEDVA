@@ -1,0 +1,49 @@
+title: UAC Bypass Attempt Detected
+id: b2c3d4e5-f6a7-8901-bcde-f12345678901
+status: validated
+description: |
+  Detects common UAC bypass techniques including fodhelper, eventvwr, and registry hijacking.
+  Created from Atomic Red Team purple team validation - CRITICAL gap identified.
+  UAC bypass allows attackers to elevate privileges without user interaction.
+author: Purple Team Validation Framework
+date: 2025/01/15
+modified: 2025/01/15
+references:
+  - https://attack.mitre.org/techniques/T1548
+  - https://github.com/redcanaryco/atomic-red-team
+  - https://github.com/hfiref0x/UACME
+logsource:
+  product: windows
+  service: sysmon
+  definition: 'Requirements: Sysmon Event ID 1 (Process Creation) and 13 (Registry Modification)'
+detection:
+  selection_process:
+    EventID: 1
+    Image|endswith:
+      - '\fodhelper.exe'
+      - '\eventvwr.exe'
+      - '\computerdefaults.exe'
+      - '\sdclt.exe'
+    ParentImage|endswith:
+      - '\cmd.exe'
+      - '\powershell.exe'
+      - '\wscript.exe'
+      - '\cscript.exe'
+  selection_registry:
+    EventID: 13
+    TargetObject|contains:
+      - 'ms-settings\shell\open\command'
+      - 'mscfile\shell\open\command'
+      - 'exefile\shell\runas\command\isolatedCommand'
+  condition: selection_process or selection_registry
+falsepositives:
+  - Legitimate UAC elevation by trusted applications
+  - Windows update processes
+  - IT administrative tools with proper authorization
+level: critical
+tags:
+  - attack.t1548
+  - attack.privilege_escalation
+  - attack.defense_evasion
+  - atomic_red_team
+  - uac_bypass

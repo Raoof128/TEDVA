@@ -1,0 +1,94 @@
+<!-- Wazuh Custom Rules for Atomic Red Team Detection -->
+<!-- Location: /var/ossec/etc/rules/local_rules.xml -->
+
+<group name="atomic_red_team,attack,">
+
+  <!-- PowerShell Execution - T1059.001 -->
+  <rule id="100001" level="10">
+    <if_group>windows</if_group>
+    <field name="win.eventdata.scriptBlockText">\.FromBase64String|EncodedCommand|-enc|Invoke-Expression|IEX|DownloadString</field>
+    <description>Suspicious PowerShell execution with encoded commands (T1059.001)</description>
+    <mitre>
+      <id>T1059.001</id>
+    </mitre>
+  </rule>
+
+  <!-- UAC Bypass - T1548 -->
+  <rule id="100002" level="12">
+    <if_group>windows</if_group>
+    <field name="win.eventdata.image">\\fodhelper\.exe$|\\eventvwr\.exe$|\\computerdefaults\.exe$</field>
+    <description>UAC bypass attempt detected (T1548)</description>
+    <mitre>
+      <id>T1548</id>
+    </mitre>
+  </rule>
+
+  <!-- Security Service Disabled - T1562 -->
+  <rule id="100003" level="15">
+    <if_sid>7040</if_sid>
+    <field name="win.system.param1">Windows Defender|WinDefend|MpsSvc|Sense|WdNisSvc</field>
+    <field name="win.system.param2">disabled</field>
+    <description>Security service disabled - possible defense evasion (T1562)</description>
+    <mitre>
+      <id>T1562</id>
+    </mitre>
+  </rule>
+
+  <!-- Deobfuscation Activity - T1140 -->
+  <rule id="100004" level="8">
+    <if_group>windows</if_group>
+    <field name="win.eventdata.commandLine">certutil.*-decode|certutil.*-urlcache</field>
+    <description>Certutil used for deobfuscation/decode (T1140)</description>
+    <mitre>
+      <id>T1140</id>
+    </mitre>
+  </rule>
+
+  <!-- Lateral Movement - T1021 -->
+  <rule id="100005" level="10">
+    <if_sid>60106,60122</if_sid>
+    <field name="win.eventdata.shareName">\\\\.*\\ADMIN\$</field>
+    <description>Lateral movement via admin share detected (T1021)</description>
+    <mitre>
+      <id>T1021</id>
+    </mitre>
+  </rule>
+
+  <!-- Event Log Clearing - T1070 -->
+  <rule id="100006" level="15">
+    <if_sid>1102,104</if_sid>
+    <description>Security event log cleared - possible anti-forensics (T1070)</description>
+    <mitre>
+      <id>T1070</id>
+    </mitre>
+  </rule>
+
+  <!-- Service Creation - T1543 -->
+  <rule id="100007" level="8">
+    <if_sid>7045</if_sid>
+    <field name="win.system.serviceName">.*</field>
+    <description>New service created - possible persistence (T1543)</description>
+    <mitre>
+      <id>T1543</id>
+    </mitre>
+  </rule>
+
+  <!-- Registry Modification - T1112 -->
+  <rule id="100008" level="6">
+    <if_group>windows</if_group>
+    <field name="win.eventdata.targetObject">HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run</field>
+    <description>Registry run key modified - possible persistence (T1112)</description>
+    <mitre>
+      <id>T1112</id>
+    </mitre>
+  </rule>
+
+  <!-- Atomic Red Team Test Execution Marker -->
+  <rule id="100100" level="3">
+    <if_group>windows</if_group>
+    <field name="win.eventdata.commandLine">Invoke-AtomicTest</field>
+    <description>Atomic Red Team test execution detected</description>
+    <options>no_log</options>
+  </rule>
+
+</group>

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dashboard version="1.1">
+  <label>Purple Team - Atomic Test Validation</label>
+  <description>Real-time detection validation dashboard for Atomic Red Team testing</description>
+  <row>
+    <panel>
+      <title>Test Execution Status</title>
+      <chart>
+        <search>
+          <query>
+index=atomic_tests
+| stats count by technique_id, detection_status
+| chart count by detection_status
+          </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">pie</option>
+        <option name="charting.chart.showPercent">true</option>
+        <option name="charting.seriesColors">[0x00CC00,0xFFD700,0xFF6B6B]</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Detection Rate Trend</title>
+      <chart>
+        <search>
+          <query>
+index=atomic_tests
+| timechart span=1h count(eval(detected=true)) as detected, count as total
+| eval detection_rate = round((detected/total)*100, 2)
+| fields _time, detection_rate
+          </query>
+          <earliest>-7d@d</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">line</option>
+        <option name="charting.axisY.abbreviation">none</option>
+        <option name="charting.axisTitleY.text">Detection Rate (%)</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Detection Coverage by Tactic</title>
+      <table>
+        <search>
+          <query>
+index=atomic_tests
+| lookup mitre_attack.csv technique_id OUTPUT tactic
+| stats count(eval(detected=true)) as detected, count as total by tactic
+| eval coverage = round((detected/total)*100, 2)
+| table tactic, detected, total, coverage
+| sort - coverage
+          </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">none</option>
+        <format type="color" field="coverage">
+          <colorPalette type="minMidMax" maxColor="#00CC00" midColor="#FFD700" minColor="#FF6B6B"></colorPalette>
+          <scale type="minMidMax" minType="number" minValue="0" midType="number" midValue="50" maxType="number" maxValue="100"></scale>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Critical Detection Gaps (Priority Techniques Not Detected)</title>
+      <table>
+        <search>
+          <query>
+index=atomic_tests detection_status=MISSING priority=CRITICAL
+| table technique_id, technique_name, tactic, business_impact
+| sort - priority
+          </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">row</option>
+        <format type="color" field="priority">
+          <colorPalette type="map">{"CRITICAL":"#FF0000","HIGH":"#FF6B6B","MEDIUM":"#FFD700"}</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>SIEM Alert Volume During Testing</title>
+      <chart>
+        <search>
+          <query>
+index=* sourcetype=*alert* OR sourcetype=WinEventLog:Security OR sourcetype=Sysmon
+| timechart span=5m count by sourcetype
+          </query>
+          <earliest>-4h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="charting.chart">column</option>
+        <option name="charting.chart.stackMode">stacked</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Recent Atomic Test Executions</title>
+      <table>
+        <search>
+          <query>
+index=atomic_tests event_type="atomic_red_team_test"
+| table _time, technique_id, test_number, test_status, detected, event_count
+| sort - _time
+| head 50
+          </query>
+          <earliest>-24h@h</earliest>
+          <latest>now</latest>
+        </search>
+        <option name="drilldown">row</option>
+        <format type="color" field="detected">
+          <colorPalette type="map">{"true":"#00CC00","false":"#FF6B6B"}</colorPalette>
+        </format>
+      </table>
+    </panel>
+  </row>
+</dashboard>

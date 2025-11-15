@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Test results and logs
+*.log
+test_matrix/*.json
+gap_analysis/*.json
+gap_analysis/*.csv
+visualizations/*.png
+atomic_execution.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+
+# Sensitive data
+*.key
+*.pem
+*.p12
+credentials.json
+secrets.yaml
+
+# Keep directory structure but ignore generated files
+!test_matrix/.gitkeep
+!gap_analysis/.gitkeep
+!visualizations/.gitkeep
